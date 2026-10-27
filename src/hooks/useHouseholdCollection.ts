@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/db';
 
 type Tables = Database['public']['Tables'];
 
-// Patrón repetido por goals, debts, scheduled_expenses, calendar_events,
+// PatrÃ³n repetido por goals, debts, scheduled_expenses, calendar_events,
 // bank_accounts, referrals, category_budgets y wallet_movements: una lista
-// simple acotada a household_id con alta/baja/edición. Se generaliza aquí en
+// simple acotada a household_id con alta/baja/ediciÃ³n. Se generaliza aquÃ­ en
 // vez de repetir el mismo hook siete veces.
 export function useHouseholdCollection<TableName extends keyof Tables>(
   table: TableName,
@@ -58,3 +58,4 @@ export function useHouseholdCollection<TableName extends keyof Tables>(
 
   return { rows, loading, error, add, remove, update, reload };
 }
+

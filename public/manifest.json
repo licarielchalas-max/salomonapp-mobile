@@ -1,0 +1,17 @@
+{
+  "name": "Salomón · Finanzas con sabiduría",
+  "short_name": "Salomón",
+  "description": "Tus finanzas con sabiduría: gastos, deudas, presupuesto y metas.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#06301A",
+  "background_color": "#06301A",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

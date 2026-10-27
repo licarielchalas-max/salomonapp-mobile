@@ -1,5 +1,6 @@
-import 'react-native-url-polyfill/auto';
+﻿import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/db';
 
@@ -17,6 +18,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // En la web los enlaces de correo (recuperar contraseña, confirmar cuenta) traen la sesión en la dirección.
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
+

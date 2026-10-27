@@ -1,30 +1,91 @@
 {
   "expo": {
-    "name": "Salomon",
+    "name": "Salomón",
     "slug": "salomon-finanzas",
     "scheme": "salomon",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#06301A"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.salomon.finanzas",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Salomón usa la cámara para escanear recibos.",
+        "NSPhotoLibraryUsageDescription": "Salomón accede a fotos para adjuntar recibos.",
+        "NSFaceIDUsageDescription": "Salomón usa Face ID para proteger tu información financiera.",
+        "NSMicrophoneUsageDescription": "Salomón usa el micrófono para grabar notas de voz en tus transacciones."
+      }
     },
     "android": {
+      "package": "com.salomon.finanzas",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#06301A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.VIBRATE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
-    ]
+      "@react-native-community/datetimepicker",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Salomón usa Face ID para proteger tu información."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Salomón accede a tus fotos para adjuntar recibos a tus gastos.",
+          "cameraPermission": "Salomón usa la cámara para fotografiar recibos."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Salomón usa el micrófono para grabar notas de voz en tus transacciones."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#E2BE4B",
+          "defaultChannel": "recordatorios-sonido",
+          "sounds": [
+            "./assets/sounds/recordatorio.wav"
+          ]
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9fb88a2d-6ba7-4665-8444-146b8fc8b6cc"
+      }
+    },
+    "owner": "arielchalas"
   }
 }

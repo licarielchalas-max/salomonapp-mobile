@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { CategoryRow } from '../types/db';
 
@@ -25,3 +25,4 @@ export function useCategories() {
 
   return { categories, loading };
 }
+

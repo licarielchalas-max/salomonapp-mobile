@@ -3,38 +3,86 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/playfair-display": "^0.4.2",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-native-community/datetimepicker": "9.1.0",
+    "@react-native-community/datetimepicker": "^9.1.0",
     "@react-native-picker/picker": "2.11.4",
     "@react-navigation/bottom-tabs": "^7.18.14",
+    "@react-navigation/drawer": "^7.13.5",
     "@react-navigation/native": "^7.3.14",
     "@react-navigation/native-stack": "^7.18.6",
     "@supabase/supabase-js": "^2.111.0",
     "expo": "~57.0.9",
+    "expo-audio": "~57.0.5",
     "expo-clipboard": "~57.0.1",
+    "expo-constants": "~57.0.20",
     "expo-document-picker": "~57.0.1",
     "expo-file-system": "~57.0.1",
+    "expo-font": "^57.0.4",
+    "expo-image-picker": "~57.0.19",
+    "expo-linear-gradient": "~57.0.2",
     "expo-local-authentication": "~57.0.2",
+    "expo-notifications": "~57.0.22",
     "expo-secure-store": "~57.0.1",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.2",
     "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "~4.6.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
     "react-native-url-polyfill": "^4.0.0",
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/plugin-transform-modules-commonjs": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@playwright/test": "^1.64.1",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
+    "axe-core": "^4.14.0",
+    "jest": "~29.7.0",
+    "patch-package": "^8.0.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "node scripts/web.js dev user",
+    "web:admin": "node scripts/web.js dev admin",
+    "build:web": "node scripts/web.js build user",
+    "build:admin": "node scripts/web.js build admin",
+    "postinstall": "patch-package",
+    "test": "jest",
+    "doctor": "node scripts/doctor.js",
+    "test:db": "node scripts/doctor.js --db",
+    "check": "node scripts/check.js",
+    "check:full": "node scripts/check.js --full",
+    "test:e2e": "playwright test"
   },
-  "private": true
+  "private": true,
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": [
+        "babel-jest",
+        {
+          "presets": [
+            "@babel/preset-typescript"
+          ],
+          "plugins": [
+            "@babel/plugin-transform-modules-commonjs"
+          ]
+        }
+      ]
+    }
+  }
 }

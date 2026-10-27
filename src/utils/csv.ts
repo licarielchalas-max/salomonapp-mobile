@@ -1,5 +1,5 @@
-// Parser mínimo que sí respeta comillas (el prototipo usaba line.split(',') y
-// se rompía con columnas que traían comas dentro de comillas, como suelen
+﻿// Parser mÃ­nimo que sÃ­ respeta comillas (el prototipo usaba line.split(',') y
+// se rompÃ­a con columnas que traÃ­an comas dentro de comillas, como suelen
 // venir los extractos bancarios).
 function parseCsvLine(line: string): string[] {
   const cells: string[] = [];
@@ -51,3 +51,4 @@ export function parseBankCsv(content: string): CsvBankRow[] {
     };
   });
 }
+

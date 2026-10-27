@@ -1,0 +1,168 @@
+# Handoff: Salomon — Backend & Multi-User Integration
+
+## Overview
+Salomon is a personal-finance app (dashboard, transactions, budget, goals, debts, bank sync, referrals, admin panel, "Rey Salomón" AI chat). It currently runs as a **single self-contained HTML prototype** with all "backend" behavior faked in the browser (localStorage). This handoff is to give it a real backend: real accounts, a real database, and data that persists and syncs across devices — instead of being trapped in one browser.
+
+## About the Design Files
+The bundled file (`Salomon App.dc.html`) is a **design reference built in HTML** — a high-fidelity prototype of the look, flows, and interactions. It is not production code to copy verbatim. The task is to **recreate this design in your target stack** (React/Vue/native/etc. — pick React or your team's standard if nothing exists yet) wired to a real backend, following the structure and content documented below.
+
+## Fidelity
+**High-fidelity.** Colors, typography, spacing, copy (in Spanish), and layout in the HTML file are final — recreate them pixel-for-pixel. The one thing that is explicitly a stand-in, not final: all data persistence (see "What's Fake Today").
+
+## What's Fake Today (must become real)
+The prototype simulates a backend entirely with `localStorage`, in `Salomon App.dc.html`:
+- **Auth / accounts**: `loadUsersDb()` / `saveUsersDb()` read/write a JSON blob at key `salomon_users_db` — a fake "users table" living in one browser. Login checks `credencial` (password or 4-digit PIN) in plaintext, no hashing.
+- **Session**: `salomon_session` key holds `{isLoggedIn, nombreUsuario, currentUserId, tab, onboardingCompletado}` — restored on load via `componentDidMount`.
+- **Per-user data**: `DATA_FIELDS` (transactions, cartera, metas, deudas, gastosProgramados, presupuesto, citas, referidos, cuentasBancarias, notificaciones, etc.) — all just fields in the same fake local JSON blob, saved on every state change (`persistUserData()`).
+- **Bank connections**: `conectarBanco()` / `simularTransaccion()` fake a bank link with a `setTimeout` and randomly generated transactions. No real bank integration (Plaid or a similar aggregator) exists.
+- **AI chat / analysis**: calls `window.claude.complete(...)` directly from the client. In production this must go through your own backend endpoint (never call an LLM directly from client-side code with a real API key).
+- **Admin metrics** (users, subscribers, ad revenue, support tickets): all derived from the same local fake state — there is no real analytics/reporting backend.
+
+## Required Backend Capabilities
+1. **Authentication**: real user accounts (email or username + password, and/or 4-digit PIN backed by proper hashing — never store PINs/passwords in plaintext). Session tokens (JWT or server sessions), not localStorage-trust.
+2. **Database**: one users/accounts table + one row-per-record table for each of: transactions, scheduled expenses, budget & budget-by-category, cartera (cash) movements, goals, debts, calendar events/appointments, notifications, bank accounts (linked), referrals, support tickets. All scoped by `user_id`, with **multi-profile support** per account (Alianza plan = 2 profiles, Legado plan = up to 5) — profiles share the same subscription but should have distinguishable ownership on records where relevant.
+3. **Subscriptions & billing**: 3 plans — Personal $5/mo (1 user), Alianza $10/mo (2 profiles), Legado $15/mo (up to 5 profiles) — all with identical feature access, differing only in profile count. Payment methods to support: card, PayPal, Google Pay, Apple Pay. Needs a real payment processor integration (Stripe recommended) — the prototype's "PayPal receptor" field is a placeholder for where the merchant's payout account would be configured.
+4. **Referral program**: unique referral code per user (`codigoReferidoFor` shows the code-generation logic to preserve), tracked referred signups, 5% discount per active referral (stacking, capped — see `referidoDescuentoPct` cap of 50% in the prototype) applied to the referrer's next invoice once the referred user's first payment succeeds.
+5. **Bank integration**: replace the simulated `conectarBanco`/`simularTransaccion` with a real aggregator (e.g., Plaid, or a Dominican-market equivalent) — pulling real transactions, mapped to the same transaction shape the app already uses.
+6. **AI chat backend proxy**: a server endpoint that holds the LLM API key, receives the user's message + relevant financial context, and returns the assistant's reply/action (register expense, reminder, appointment, support ticket, verse of the day) — mirroring the JSON contract already used in `enviarChat()`.
+7. **Push/local notifications**: server-triggered notifications for upcoming scheduled payments and budget-limit warnings, plus the sound/vibration preference already in Settings.
+8. **Admin analytics**: real aggregate queries for active users, subscriber counts by plan, ad impressions/revenue, and support ticket status — replacing the client-side arrays used today.
+9. **Support tickets**: persisted server-side, with an admin-only view to respond (`ticketsSoporte` — currently local-only, no reply/response field exists yet and should be added).
+
+## Screens / Views (in `Salomon App.dc.html`)
+- **Inicio** (`isInicio`): marketing/landing view — hero, feature highlights, module previews, 3 pricing cards, security blurb, closing banner.
+- **Auth** (`isAuth`): login/register — identifier (email or name) + password or 4-digit PIN, or fingerprint-style "continue" button (simulated).
+- **Checkout** (`showCheckout` modal, steps: `auth` → `perfiles` (if plan allows >1) → `pago` → `config`): plan selection → account creation/login → profile creation (multi-profile plans) → payment method choice → app name/currency/language config.
+- **Onboarding** (`isOnboarding`, 4 steps): first income source, first scheduled expense (with due + reminder dates + payment method), monthly budget, review/finish.
+- **Dashboard** (`isDashboard`): KPI cards (income, expenses, net balance, cartera balance), budget progress bar with over/near-limit color states, category donut chart, income-vs-expense bars, ad slot (728×90), recent transactions table, rotating Bible-proverb "wisdom" card.
+- **Movimientos** (`isMovimientos`): add income/expense form (category/subcategory, method, fixed vs variable, essential flag, frequency for income), running-balance history table.
+- **Gastos programados** (`isGastosProg`): scheduled/recurring expenses with due date, reminder date, payment method, paid/pending toggle.
+- **Presupuesto** (`isPresupuesto`): overall monthly budget + per-category budgets with spent/limit bars.
+- **Cartera** (`isCartera`): cash wallet balance and in/out movements.
+- **Metas** (`isMetas`): savings goals with progress bars and quick "+50" contribution.
+- **Deudas** (`isDeudas`): debt list + consolidation simulator (30% payment reduction estimate).
+- **Agenda** (`isAgenda`): calendar grid + appointment list, tied into notifications.
+- **Bancos** (`isBancos`): connect/manage linked bank accounts, simulated auto-transactions, reconciliation against manual entries.
+- **Referidos** (`isReferidos`): referral code/link, share via WhatsApp/native share/copy, referral list with active/pending states and cumulative discount.
+- **Marketplace** (`isMarketplace`): sponsored bank/financial-product cards; admin CTA to pitch banks on advertising.
+- **Conciliación** (`isConciliacion`): CSV bank-statement upload, auto-match against recorded transactions.
+- **Admin** (`isAdmin`, gated by `vistaRol` prop / real admin role in production): user/subscriber/ad metrics, influencer campaign manager, social channel list, support ticket queue.
+- **Rey Salomón chat widget**: floating bottom-right chat (crown icon), persistent across all screens — registers expenses, reminders, appointments, support tickets, gives financial advice and a daily Bible verse, addresses the user by name.
+
+## Design Tokens
+- Colors: `#0F5132` (deep green, primary), `#C9A227`/`#E8CD7A` (gold accents), `#FBF8EE` (cream background), `#FFFFFF` (cards), `#E1DCC8` (borders), `#2C2C2C` (ink/text), `#6E6E68` (muted text), `#2F6F52`/`#E4F1EA` (positive/green tint), `#8C4A3B`/`#F3E3DE` (negative/rust tint).
+- Typography: `Fraunces` (serif, display/headings), `Inter` (sans, body/UI), `IBM Plex Mono` (numbers/amounts/dates).
+- Border radius: 7–16px depending on component size (small buttons ~7-9px, cards 14px, modals 16px).
+- Shadows: soft, low-opacity green-tinted shadows on menus/modals (`rgba(15,81,50,0.12–0.35)`).
+
+## Assets
+- Logo: `assets/salomon-crown.png` (gold crown emblem) — reused at multiple sizes throughout (header, hero, chat widget, auth screens).
+
+## Suggested Database Schema (relational, e.g. Postgres)
+
+```
+users
+  id (pk), email, name, password_hash, pin_hash, plan (personal|alianza|legado),
+  currency, language, country, notification_tone, admin_role (bool),
+  referral_code (unique), referred_by_user_id (fk nullable),
+  stripe_customer_id, subscription_status, created_at
+
+profiles                      -- one row per seat under an account (Alianza=2, Legado=5)
+  id (pk), account_id (fk users.id), display_name, created_at
+
+transactions
+  id (pk), user_id (fk), profile_id (fk nullable), type (ingreso|gasto),
+  amount, description, category, subcategory, source (for ingreso),
+  payment_method, is_fixed (bool), is_essential (bool), frequency,
+  date, created_at
+
+scheduled_expenses
+  id (pk), user_id (fk), description, category, amount,
+  due_date, reminder_date, payment_method, status (pendiente|pagado), created_at
+
+budgets
+  id (pk), user_id (fk), monthly_amount, updated_at
+budget_categories
+  id (pk), user_id (fk), category, limit_amount
+
+cartera_movements
+  id (pk), user_id (fk), type (entrada|salida|transferencia_a_banco|transferencia_de_banco),
+  amount, description, date
+cartera_settings
+  user_id (pk/fk), initial_balance
+
+goals
+  id (pk), user_id (fk), name, target_amount, current_amount, created_at
+
+debts
+  id (pk), user_id (fk), name, balance, monthly_payment, annual_rate
+
+calendar_events
+  id (pk), user_id (fk), title, date, time, created_at
+
+bank_accounts
+  id (pk), user_id (fk), bank_name, account_number_last4, account_number_full (encrypted),
+  aggregator_account_id (e.g. Plaid), status (conectado|error), linked_at
+bank_transactions                 -- pulled from aggregator, then reconciled
+  id (pk), bank_account_id (fk), amount, description, date, matched_transaction_id (fk nullable)
+
+referrals
+  id (pk), referrer_user_id (fk), referred_user_id (fk), status (pendiente|activo), created_at
+
+support_tickets
+  id (pk), user_id (fk), message, status (abierto|resuelto), admin_reply, created_at, resolved_at
+
+notifications
+  id (pk), user_id (fk), title, body, created_at, read_at
+
+influencer_campaigns              -- admin-only
+  id (pk), name, network, budget, duration_days, status (propuesta|activa), created_at
+
+subscriptions / billing (or delegate entirely to Stripe)
+  user_id (fk), plan, price, status, current_period_end, payment_method_type
+```
+
+Notes:
+- Everything scoped by `user_id` (the paying account); `profile_id` distinguishes household members under one Alianza/Legado subscription where useful (e.g. transactions), but subscription/plan/billing always lives on the account, not the profile.
+- Never store `password_hash`/`pin_hash` in plaintext — use bcrypt/argon2.
+- Encrypt `account_number_full` at rest; only ever show last 4 digits in the UI (matches current prototype behavior).
+
+## Suggested API Endpoints
+
+```
+POST   /auth/register                  { email|name, password|pin }
+POST   /auth/login
+POST   /auth/logout
+GET    /me                             -- current user + profile + plan
+
+GET    /transactions      POST /transactions      DELETE /transactions/:id
+GET    /scheduled-expenses  POST ...   PATCH /scheduled-expenses/:id (toggle paid)
+GET    /budget             PUT /budget              (monthly amount)
+GET    /budget/categories  POST/DELETE /budget/categories/:id
+GET    /cartera            POST /cartera/movements
+GET    /goals              POST /goals   PATCH /goals/:id (contribute)
+GET    /debts               POST/DELETE /debts/:id
+GET    /calendar-events     POST/DELETE /calendar-events/:id
+
+POST   /bank-accounts/link              -- kicks off aggregator (Plaid) link flow
+GET    /bank-accounts
+DELETE /bank-accounts/:id
+POST   /bank-accounts/:id/reconcile     -- match bank_transactions to transactions
+
+GET    /referrals
+POST   /referrals/redeem                -- applied at signup via referral code
+
+POST   /support-tickets                 POST /support-tickets/:id/resolve  (admin)
+
+POST   /chat                            { message } -> proxies to LLM server-side,
+                                          returns { reply, action } (registrar_gasto | recordatorio | cita | soporte | ninguna)
+
+GET    /admin/metrics                   -- active users, subscribers by plan, ad revenue, ticket counts
+POST   /admin/influencer-campaigns      GET/PATCH/DELETE .../:id
+
+POST   /billing/checkout-session        -- Stripe Checkout/PaymentIntent creation
+POST   /billing/webhook                 -- Stripe webhook (subscription updates)
+```
+
+## Files
+- `Salomon App.dc.html` — the complete prototype (all screens, all logic/state, inline styles).
